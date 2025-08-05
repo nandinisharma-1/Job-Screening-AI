@@ -1,0 +1,9 @@
+﻿Flask==2.2.2                # For creating the web API and web interface
+Flask-Cors==3.0.10          # For handling Cross-Origin Resource Sharing (CORS) if needed
+pandas==1.4.2               # For data manipulation and handling CSV files
+pdfplumber==0.7.4           # For extracting text from PDF CVs
+sqlite3                     # SQLite is included with Python, but you can specify it if needed
+requests==2.27.1            # For making HTTP requests (if needed for web scraping or API calls)
+scikit-learn==1.0.2         # For calculating match scores and other ML tasks
+smtplib
+email
