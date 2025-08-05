@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Screening AI</title>
+    <style>
+        body {
+            
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-blend-mode: overlay;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #0d0c24;
+            color: white;
+        }
+
+        h1 {
+            font-family: Courier New, monospace;
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        
+
+        .container {
+            margin: 20px auto;
+            max-width: 750px;
+            background-color: #1a1b3f;
+            border-radius: 60px;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+            padding: 20px;
+        }
+
+        h2 {
+            color: #66a3ff;
+            border-bottom: 2px solid #99ccff;
+            padding-bottom: 10px;
+            margin-top: 20px;
+        }
+
+        .output-box {
+            border: 1px solid #66a3ff;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #272956;
+            border-radius: 30px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            color: #ffffff;
+        }
+
+        th,
+        td {
+            border: 1px solid #66a3ff;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #66a3ff;
+            color: white;
+        }
+
+        button {
+            margin: 10px 0;
+            width: 70%;
+            padding: 7px;
+            background-color: #5999fa;
+            color: white;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4da6ff;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #cccccc;
+        }
+
+        .header-image {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header-image img {
+            max-width: 250px; /* Set the width of the first image */
+            height: 250px; /* Maintain the same height */
+            border-radius: 50px;
+        }
+    </style>
+
+    <script>
+        async function uploadJobDescriptions() {
+            const fileInput = document.getElementById('jobDescriptionFile');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const response = await fetch('/upload_job_descriptions', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.summaries) {
+                let summariesHtml = '';
+                data.summaries.forEach(item => {
+                    summariesHtml += `<p><strong>Job Title:</strong> ${item['Job Title']}<br><strong>Summary:</strong> ${item['Summary']}</p>`;
+                });
+                document.getElementById('summaryOutput').innerHTML = summariesHtml;
+            } else {
+                document.getElementById('summaryOutput').innerText = data.error;
+            }
+        }
+
+        async function matchCandidates() {
+            const cvFilesInput = document.getElementById('cvFiles');
+            const formData = new FormData();
+            for (const file of cvFilesInput.files) {
+                formData.append('cv_files', file);
+            }
+
+            const response = await fetch('/match_candidates', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.results) {
+                let resultsHtml = '<table><tr><th>Candidate Name</th><th>Job Title</th><th>Matching Score</th></tr>';
+                data.results.forEach(item => {
+                    resultsHtml += `<tr><td>${item['Candidate Name']}</td><td>${item['Job Title']}</td><td>${item['Matching Score']}</td></tr>`;
+                });
+                resultsHtml += '</table>';
+                document.getElementById('matchingResultsOutput').innerHTML = resultsHtml;
+
+                if (data.shortlisted_candidates && data.shortlisted_candidates.length > 0) {
+                    let shortlistedHtml = '<h3>Shortlisted Candidates:</h3><table><tr><th>Candidate Name</th><th>Job Title</th></tr>';
+                    data.shortlisted_candidates.forEach(candidate => {
+                        shortlistedHtml += `<tr><td>${candidate['Candidate Name']}</td><td>${candidate['Job Title']}</td></tr>`;
+                    });
+                    shortlistedHtml += '</table>';
+                    document.getElementById('shortlistedCandidatesOutput').innerHTML = shortlistedHtml;
+                } else {
+                    document.getElementById('shortlistedCandidatesOutput').innerText = 'No candidates shortlisted.';
+                }
+            } else {
+                document.getElementById('matchingResultsOutput').innerText = data.error;
+            }
+        }
+
+        async function scheduleInterviews() {
+            const cvFilesInput = document.getElementById('cvFiles');
+            const formData = new FormData();
+            for (const file of cvFilesInput.files) {
+                formData.append('cv_files', file);
+            }
+
+            const response = await fetch('/schedule_interviews', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.scheduled_interviews) {
+                let interviewsHtml = '<table><tr><th>Candidate</th><th>Job Title</th><th>Score</th><th>Interview Time</th></tr>';
+                data.scheduled_interviews.forEach(interview => {
+                    interviewsHtml += `<tr><td>${interview['candidate_name']}</td><td>${interview['job_title']}</td><td>${interview['matching_score']}</td><td>${interview['interview_time']}</td></tr>`;
+                });
+                interviewsHtml += '</table>';
+                document.getElementById('scheduledInterviewsOutput').innerHTML = interviewsHtml;
+            } else if (data.message) {
+                document.getElementById('scheduledInterviewsOutput').innerText = data.message;
+            } else {
+                document.getElementById('scheduledInterviewsOutput').innerText = data.error;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="header-image">
+        <h1>
+            
+            JOB SCREENING AI
+        </h1>
+    </div>
+    <div class="container">
+        <h2>Job Description</h2>
+        <input
+            type="file"
+            id="jobDescriptionFile"
+            accept=".csv"
+            required
+            style="border-radius: 10px; background-color: #66a3ff"
+        />
+        <button onclick="uploadJobDescriptions()">Submit Job Description</button>
+        <div class="output-box">
+            <h3>Summarized Job Description:</h3>
+            <div id="summaryOutput"></div>
+        </div><br><br>
+        <h2>Match Candidates</h2>
+        <input
+            type="file"
+            id="cvFiles"
+            accept=".pdf"
+            multiple
+            required
+            style="border-radius: 10px; background-color: #66a3ff"
+        />
+        <button onclick="matchCandidates()">Match Candidates</button>
+        <div class="output-box">
+            <h3>Score:</h3>
+            <div id="matchingResultsOutput"></div>
+        </div><br><br>
+        <h2>Shortlisted Candidates</h2>
+        <div class="output-box" id="shortlistedCandidatesOutput"></div><br><br>
+        <h2>Schedule Interviews</h2>
+        <button onclick="scheduleInterviews()">Schedule Interviews</button>
+        <div class="output-box">
+            <h3>Scheduled Interviews:</h3>
+            <div id="scheduledInterviewsOutput"></div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2025 Job Screening AI. All rights reserved.</p>
+    </footer>
+</body>
+</html>
